@@ -34,7 +34,7 @@ const getClassNameForNamespacedStyleName = (styleName: string, styleModuleImport
 
 export default (styleNameValue: string, styleModuleImportMap: StyleModuleImportMapType): string => {
   const styleModuleImportMapKeys = Object.keys(styleModuleImportMap);
-
+  if(!styleNameValue) return '';
   return styleNameValue
     .split(' ')
     .filter((styleName) => {
@@ -56,7 +56,8 @@ export default (styleNameValue: string, styleModuleImportMap: StyleModuleImportM
       const styleModuleMap: StyleModuleMapType = styleModuleImportMap[styleModuleImportMapKeys[0]];
 
       if (!styleModuleMap[styleName]) {
-        throw new Error('Could not resolve the styleName \'' + styleName + '\'.');
+        console.error('Could not resolve the styleName \'' + styleName + '\'.');
+        return '';
       }
 
       return styleModuleMap[styleName];
