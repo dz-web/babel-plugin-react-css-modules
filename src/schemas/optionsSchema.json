@@ -11,25 +11,32 @@
       "additionalProperties": false,
       "patternProperties": {
         "\\..*": {
-          "type": "object",
           "additionalProperties": false,
           "properties": {
-            "syntax": {
-              "type": "string"
-            },
             "plugins": {
-              "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "type": "array"
+            },
+            "syntax": {
+              "type": "string"
             }
-          }
+          },
+          "type": "object"
         }
       },
       "type": "object"
     },
     "generateScopedName": {
-      "type": "string"
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "typeof": "function"
+        }
+      ]
     },
     "removeImport": {
       "type": "boolean"

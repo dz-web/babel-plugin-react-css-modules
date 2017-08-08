@@ -6,6 +6,7 @@ import {
 } from 'path';
 import babelPluginJsxSyntax from 'babel-plugin-syntax-jsx';
 import BabelTypes from 'babel-types';
+import ajvKeywords from 'ajv-keywords';
 import Ajv from 'ajv';
 import optionsSchema from './schemas/optionsSchema.json';
 import createObjectExpression from './createObjectExpression';
@@ -14,6 +15,8 @@ import resolveStringLiteral from './resolveStringLiteral';
 import replaceJsxExpressionContainer from './replaceJsxExpressionContainer';
 
 const ajv = new Ajv();
+
+ajvKeywords(ajv);
 
 const validate = ajv.compile(optionsSchema);
 
@@ -104,7 +107,7 @@ export default ({
     }
   };
 
-  const getTargetResourcePath = (path: Object, stats:Object) => {
+  const getTargetResourcePath = (path: *, stats: *) => {
     const targetFileDirectoryPath = dirname(stats.file.opts.filename);
 
     if (path.node.source.value.startsWith('.')) {
@@ -114,7 +117,7 @@ export default ({
     return require.resolve(path.node.source.value);
   };
 
-  const notForPlugin = (path: Object, stats: Object) => {
+  const notForPlugin = (path: *, stats: *) => {
     stats.opts.filetypes = stats.opts.filetypes || {};
 
     const extension = path.node.source.value.lastIndexOf('.') > -1 ? path.node.source.value.substr(path.node.source.value.lastIndexOf('.')) : null;
@@ -133,7 +136,7 @@ export default ({
   return {
     inherits: babelPluginJsxSyntax,
     visitor: {
-      ImportDeclaration (path: Object, stats: Object): void {
+      ImportDeclaration (path: *, stats: *): void {
         if (notForPlugin(path, stats)) {
           return;
         }
@@ -169,7 +172,7 @@ export default ({
           path.remove();
         }
       },
-      JSXElement (path: Object, stats: Object): void {
+      JSXElement (path: *, stats: *): void {
         const filename = stats.file.opts.filename;
         const styleNameAttribute = path.node.openingElement.attributes
           .find((attribute) => {
@@ -203,7 +206,7 @@ export default ({
           );
         }
       },
-      Program (path: Object, stats: Object): void {
+      Program (path: *, stats: *): void {
         if (!validate(stats.opts)) {
           // eslint-disable-next-line no-console
           console.error(validate.errors);

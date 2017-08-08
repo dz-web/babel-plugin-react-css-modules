@@ -15,24 +15,29 @@ import Parser from 'postcss-modules-parser';
 import Scope from 'postcss-modules-scope';
 import Values from 'postcss-modules-values';
 import type {
+  GenerateScopedNameConfigurationType,
   StyleModuleMapType
 } from './types';
 
-type FileTypeOptions = {|
+type FiletypeOptionsType = {|
   +syntax: string,
-  // eslint-disable-next-line no-undef
   +plugins?: $ReadOnlyArray<string>
 |};
 
-const getFiletypeOptions = (cssSourceFilePath: string, filetypes: {[key: string]: FileTypeOptions}): ?FileTypeOptions => {
+type FiletypesConfigurationType = {
+  [key: string]: FiletypeOptionsType
+};
+
+const getFiletypeOptions = (cssSourceFilePath: string, filetypes: FiletypesConfigurationType): ?FiletypeOptionsType => {
   const extension = cssSourceFilePath.substr(cssSourceFilePath.lastIndexOf('.'));
   const filetype = filetypes ? filetypes[extension] : null;
 
   return filetype;
 };
 
-const getSyntax = (filetypeOptions: FileTypeOptions): ?(Function|Object) => {
-  if (!filetypeOptions) {
+// eslint-disable-next-line flowtype/no-weak-types
+const getSyntax = (filetypeOptions: FiletypeOptionsType): ?(Function | Object) => {
+  if (!filetypeOptions || !filetypeOptions.syntax) {
     return null;
   }
 
@@ -40,8 +45,8 @@ const getSyntax = (filetypeOptions: FileTypeOptions): ?(Function|Object) => {
   return require(filetypeOptions.syntax);
 };
 
-// eslint-disable-next-line no-undef
-const getExtraPlugins = (filetypeOptions: ?FileTypeOptions): $ReadOnlyArray<any> => {
+// eslint-disable-next-line flowtype/no-weak-types
+const getExtraPlugins = (filetypeOptions: ?FiletypeOptionsType): $ReadOnlyArray<*> => {
   if (!filetypeOptions || !filetypeOptions.plugins) {
     return [];
   }
@@ -52,7 +57,8 @@ const getExtraPlugins = (filetypeOptions: ?FileTypeOptions): $ReadOnlyArray<any>
   });
 };
 
-const getTokens = (runner, cssSourceFilePath: string, filetypeOptions: ?FileTypeOptions): StyleModuleMapType => {
+const getTokens = (runner, cssSourceFilePath: string, filetypeOptions: ?FiletypeOptionsType): StyleModuleMapType => {
+  // eslint-disable-next-line flowtype/no-weak-types
   const options: Object = {
     from: cssSourceFilePath
   };
@@ -75,8 +81,8 @@ const getTokens = (runner, cssSourceFilePath: string, filetypeOptions: ?FileType
 };
 
 type OptionsType = {|
-  filetypes: Object,
-  generateScopedName?: string,
+  filetypes: FiletypesConfigurationType,
+  generateScopedName?: GenerateScopedNameConfigurationType,
   context?: string
 |};
 
@@ -84,9 +90,15 @@ export default (cssSourceFilePath: string, options: OptionsType): StyleModuleMap
   // eslint-disable-next-line prefer-const
   let runner;
 
-  const scopedName = genericNames(options.generateScopedName || '[path]___[name]__[local]___[hash:base64:5]', {
-    context: options.context || process.cwd()
-  });
+  let generateScopedName;
+
+  if (options.generateScopedName && typeof options.generateScopedName === 'function') {
+    generateScopedName = options.generateScopedName;
+  } else {
+    generateScopedName = genericNames(options.generateScopedName || '[path]___[name]__[local]___[hash:base64:5]', {
+      context: options.context || process.cwd()
+    });
+  }
 
   const filetypeOptions = getFiletypeOptions(cssSourceFilePath, options.filetypes);
 
@@ -105,7 +117,7 @@ export default (cssSourceFilePath: string, options: OptionsType): StyleModuleMap
     LocalByDefault,
     ExtractImports,
     new Scope({
-      generateScopedName: scopedName
+      generateScopedName
     }),
     new Parser({
       fetch
